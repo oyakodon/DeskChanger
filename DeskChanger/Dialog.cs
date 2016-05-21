@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
 
@@ -7,7 +8,7 @@ namespace DeskChanger
     public partial class Dialog : Form
     {
         public Form1 mainForm;
-        private int swapNum = -1;
+        private List<int> swapNums = null;
 
         public Dialog()
         {
@@ -21,30 +22,50 @@ namespace DeskChanger
 
         private void button1_Click(object sender, EventArgs e)
         {
-            if (Control.ModifierKeys == Keys.Control && swapNum == -1)
+            if (swapNums == null)
             {
-
-                var lamp = new Bitmap(pictureBox1.Width, pictureBox1.Height);
-                var g = Graphics.FromImage(lamp);
-                g.FillEllipse(Brushes.Green, 1, 1, pictureBox1.Width - 2, pictureBox1.Height - 2);
-                g.Dispose();
-                pictureBox1.Image = lamp;
-
-                swapNum = (int)numericUpDown1.Value;
-                return;
+                try
+                {
+                    swapNums = new List<int>();
+                    addSwaps();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message, "エラー", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
             }
 
             numericUpDown1.Enabled = false;
 
             try
             {
-                mainForm.button1_Click(swapNum);
+                mainForm.button1_Click(swapNums);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                MessageBox.Show(ex.Message, "エラー", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 numericUpDown1.Enabled = true;
             }
 
+        }
+
+        private void addSwaps()
+        {
+            for(var i = 0; i < dataGridView1.Rows.Count - 1; i++)
+            {
+                int swap;
+                int.TryParse(dataGridView1[0, i].Value.ToString(), out swap);
+                if(swap != 0 && swap <= 48)
+                {
+                    swapNums.Add(swap);
+
+                } else
+                {
+                    swapNums = null;
+                    throw new FormatException("表の数字に誤りがあります。");
+                }
+            }
         }
 
         private void numericUpDown1_ValueChanged(object sender, EventArgs e)

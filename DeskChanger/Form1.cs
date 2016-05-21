@@ -94,16 +94,25 @@ namespace DeskChanger
             
         }
 
-        public void button1_Click(int swapNum)
+        public void button1_Click(List<int> swapNums)
         {
             // 乱数配列生成
             generateRndList();
 
-            // 不正はなかった
-            if (swapNum != -1)
+            if (classNum >= 12 && swapNums.Count <= 12)
             {
-                var swapNumIndex = rndList.IndexOf(swapNum);
-                swap(swapNumIndex, classNum - 1);
+                var rnd = new Random();
+                foreach (var swapNum in swapNums)
+                {
+                    var swapNumIndex = rndList.IndexOf(swapNum);
+                    var forward = new List<int>(rndList.Take(12).ToList());
+                    forward.RemoveAll(x => swapNums.Contains(x));
+                    var forwardIndex =rndList.IndexOf(forward[rnd.Next(forward.Count)]);
+                    swap(swapNumIndex, forwardIndex);
+                }
+            } else
+            {
+                throw new FormatException("クラス人数が12より少ないか、前にしたい人の人数が12人より多くなっています。");
             }
 
             // ラベルが生成されているか？
@@ -122,12 +131,12 @@ namespace DeskChanger
 
                 catch (FormatException ex)
                 {
-                    MessageBox.Show(ex.Message, "エラー", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     throw ex;
                 }
 
                 generateLabels();
             }
+
 
         }
 
