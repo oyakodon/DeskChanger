@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
 using System.Linq;
+using ClosedXML.Excel;
 
 namespace DeskChanger
 {
-    public partial class Form1 : Form
+    public partial class SeatVisualizer : Form
     {
         public int classNum = 1;
 
@@ -14,13 +15,10 @@ namespace DeskChanger
         private List<bool> checkedList = new List<bool>();
         private bool isLabelInited = false;
         
-        public Form1()
+        public SeatVisualizer()
         {
             InitializeComponent();
-            var diag = new Dialog();
-            diag.mainForm = this;
-            diag.Show();
-
+            
             // checkedListの初期化
             for (var i = 0; i < 48; i++)
             {
@@ -28,6 +26,25 @@ namespace DeskChanger
             }
 
             createCheckBox();
+
+            /*
+            // アセンブリ
+            var asm = System.Reflection.Assembly.GetExecutingAssembly();
+            //リソースの名前
+            var resName = asm.GetName().Name + ".Template_SeatTable.xlsx";
+
+            //リソースを読み込む
+            var stream = asm.GetManifestResourceStream(resName);
+            var buffer = new byte[stream.Length];
+            stream.Read(buffer, 0, (int)buffer.Length);
+            stream.Close();
+
+            //ファイルに書き込む
+            var fileName = Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "\aaa.xlsx";
+            var fs = new System.IO.FileStream(fileName, System.IO.FileMode.Create);
+            fs.Write(buffer, 0, (int)buffer.Length);
+            fs.Close();
+            */
         }
 
         private void generateRndList()

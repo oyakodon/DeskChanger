@@ -1,6 +1,6 @@
 ﻿namespace DeskChanger
 {
-    partial class Form1
+    partial class SeatVisualizer
     {
         /// <summary>
         /// 必要なデザイナー変数です。
