@@ -144,60 +144,108 @@ namespace DeskChanger
 
             try
             {
-                //リソースを読み込む
-                var asm = System.Reflection.Assembly.GetExecutingAssembly();
-                var stream = asm.GetManifestResourceStream("DeskChanger.Template_SeatTable.xlsx");
-                var buffer = new byte[stream.Length];
-                stream.Read(buffer, 0, (int)buffer.Length);
-                stream.Close();
-
-                //ファイルに書き込む
-                var fs = new System.IO.FileStream(fileName, System.IO.FileMode.Create);
-                fs.Write(buffer, 0, (int)buffer.Length);
-                fs.Close();
-                
                 // 座席情報の書き込み
-                using (var wb = new XLWorkbook(fileName))
+                const float fontSize = 11;
+                const string fontName = "Meiryo UI";
+
+                var wb = new XLWorkbook();
+                var ws= wb.Worksheets.Add("Sheet1");
+
+                // 幅の設定
+                ws.Columns(2, 7).Width = 16.43;
+                ws.Rows(6, 13).Height = 45;
+
+                // セルの設定
+                var r1 = ws.Range("D2:E2");
+                r1.Merge();
+                r1.Value = Preference.className + "座席表";
+                r1.Style.Font.FontSize = fontSize;
+                r1.Style.Font.FontName = fontName;
+                r1.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                r1.Style.Border.OutsideBorder = XLBorderStyleValues.None;
+
+                var r2 = ws.Range("B3:G3");
+                r2.Merge();
+                r2.Value = "ホワイトボード";
+                r2.Style.Font.FontSize = fontSize;
+                r2.Style.Font.FontName = fontName;
+                r2.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                r2.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+
+                var r3 = ws.Range("D4:E4");
+                r3.Merge();
+                r3.Value = "教卓";
+                r3.Style.Font.FontSize = fontSize;
+                r3.Style.Font.FontName = fontName;
+                r3.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                r3.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+
+                ws.Cell("B15").Value = "Students:";
+                ws.Cell("B15").Style.Font.FontSize = fontSize;
+                ws.Cell("B15").Style.Font.FontName = fontName;
+
+                ws.Cell("C15").Value = Preference.classNum;
+                ws.Cell("C15").Style.Font.FontSize = fontSize;
+                ws.Cell("C15").Style.Font.FontName = fontName;
+
+                ws.Cell("F15").Value = "Updated:";
+                ws.Cell("F15").Style.Font.FontSize = fontSize;
+                ws.Cell("F15").Style.Font.FontName = fontName;
+
+                ws.Cell("G15").Value = DateTime.Now.ToString("yyyy/MM/dd").ToString();
+                ws.Cell("G15").Style.Font.FontSize = fontSize;
+                ws.Cell("G15").Style.Font.FontName = fontName;
+
+                ws.Cell("B16").Value = "空";
+                ws.Cell("B16").Style.Font.FontSize = fontSize;
+                ws.Cell("B16").Style.Font.FontName = fontName;
+                ws.Cell("B16").Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+
+                ws.Cell("C16").Style.Fill.BackgroundColor = XLColor.Gray;
+                ws.Cell("C16").Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+                ws.Cell("C16").Style.Border.DiagonalBorder = XLBorderStyleValues.Thin;
+                ws.Cell("C16").Style.Border.DiagonalUp = true;
+
+                var count = 0;
+                for (var i = 0; i < 8; i++)
                 {
-                    var ws = wb.Worksheet("Sheet1");
-                    ws.Cell("D2").Value = Preference.className;
-                    ws.Cell("C15").Value = Preference.classNum;
-                    ws.Cell("G15").Value = DateTime.Now.ToString("yyyy/MM/dd");
-
-                    var count = 0;
-
-                    for (var i = 0; i < 8; i++)
+                    for (var j = 0; j < 6; j++)
                     {
-                        for (var j = 0; j < 6; j++)
+                        if (Preference.emptySeats[6 * i + j])
                         {
-                            if (Preference.emptySeats[6 * i + j])
+                            // 空席
+                            ws.Cell("C16").CopyTo(ws.Cell(6 + i, 2 + j));
+
+                        } else
+                        {
+                            var str = rndList[count].ToString();
+                            if (Preference.useRecord)
                             {
-                                // 空席
-                                ws.Cell("C16").CopyTo(ws.Cell(6 + i, 2 + j));
-
-                            } else
-                            {
-                                var str = rndList[count].ToString();
-                                if (Preference.useRecord)
-                                {
-                                    str += Environment.NewLine + Preference.record[rndList[count] - 1];
-                                }
-
-                                ws.Cell(6 + i, 2 + j).Value = str;
-
-                                count++;
+                                str += Environment.NewLine + Preference.record[rndList[count] - 1];
                             }
+
+                            ws.Cell(6 + i, 2 + j).Value = str;
+                            ws.Cell(6 + i, 2 + j).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                            ws.Cell(6 + i, 2 + j).Style.Border.OutsideBorder = XLBorderStyleValues.Thick;
+                            ws.Cell(6 + i, 2 + j).Style.Font.FontSize = fontSize;
+                            ws.Cell(6 + i, 2 + j).Style.Font.FontName = fontName;
+
+                            count++;
                         }
                     }
-
-                    wb.Save();
                 }
+
+                wb.SaveAs(fileName);
+                
             }
             catch (Exception ex)
             {
+                var logPath = Environment.CurrentDirectory + "\\error.log";
+                var log = "";
+                if (System.IO.File.Exists(logPath)) log = System.IO.File.ReadAllText(logPath);
+                log = DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss") + ":" + Environment.NewLine + ex.Message + Environment.NewLine + ex.StackTrace　+ Environment.NewLine + log;
+                System.IO.File.WriteAllText(logPath, log);
                 MessageBox.Show("予期しないエラーが発生しました。\n詳しくは開発者にお問い合わせください。", "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                var appendText = DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss") + ":" + Environment.NewLine + ex.Message + Environment.NewLine + ex.StackTrace;
-                System.IO.File.AppendAllText(Environment.CurrentDirectory + "\\error.log", appendText);
                 return;
             }
 

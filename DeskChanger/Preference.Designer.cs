@@ -71,6 +71,8 @@
             this.lblp4_1 = new System.Windows.Forms.Label();
             this.numDebugProgress = new System.Windows.Forms.NumericUpDown();
             this.lblStep4 = new System.Windows.Forms.Label();
+            this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
+            this.statusStrip.SuspendLayout();
             this.panelStart.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.picbox_oykdn)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.picbox_appicon)).BeginInit();
@@ -88,6 +90,8 @@
             // 
             // statusStrip
             // 
+            this.statusStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripStatusLabel1});
             this.statusStrip.Location = new System.Drawing.Point(0, 401);
             this.statusStrip.Name = "statusStrip";
             this.statusStrip.Size = new System.Drawing.Size(710, 22);
@@ -538,6 +542,12 @@
             this.lblStep4.TabIndex = 8;
             this.lblStep4.Text = "4. 前にする人の設定";
             // 
+            // toolStripStatusLabel1
+            // 
+            this.toolStripStatusLabel1.Name = "toolStripStatusLabel1";
+            this.toolStripStatusLabel1.Size = new System.Drawing.Size(63, 17);
+            this.toolStripStatusLabel1.Text = "Preference";
+            // 
             // Preference
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -561,6 +571,8 @@
             this.Text = "設定 - DeskChanger";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Preference_FormClosing);
             this.Load += new System.EventHandler(this.Preference_Load);
+            this.statusStrip.ResumeLayout(false);
+            this.statusStrip.PerformLayout();
             this.panelStart.ResumeLayout(false);
             this.panelStart.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.picbox_oykdn)).EndInit();
@@ -629,5 +641,6 @@
         private System.Windows.Forms.DataGridView dgvSelection;
         private System.Windows.Forms.Label lblp5_1;
         private System.Windows.Forms.Label lblp5_2;
+        private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel1;
     }
 }

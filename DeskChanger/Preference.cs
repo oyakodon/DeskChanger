@@ -55,11 +55,6 @@ namespace DeskChanger
         private int progress { get; set; }
 
         /// <summary>
-        /// アセンブリ
-        /// </summary>
-        private System.Reflection.Assembly asm { get; set; }
-
-        /// <summary>
         /// 座席チェックボックス
         /// </summary>
         private static List<CheckBox> emptyChkBoxes { get; set; }
@@ -71,7 +66,7 @@ namespace DeskChanger
         {
             // Startパネル
             // アイコンを埋め込みリソースから読み込んで表示
-            asm = System.Reflection.Assembly.GetExecutingAssembly();
+            var asm = System.Reflection.Assembly.GetExecutingAssembly();
             var bmp_appIco = new Bitmap(asm.GetManifestResourceStream("DeskChanger.deskChanger_icon.png"));
             var bmp_oykdnIco = new Bitmap(asm.GetManifestResourceStream("DeskChanger.oykdn_icon.png"));
             picbox_appicon.Image = bmp_appIco;
@@ -240,10 +235,18 @@ namespace DeskChanger
 
         private void btnCpXlsx_Click(object sender, EventArgs e)
         {
-            var dlg = MessageBox.Show("クラスの人数(" + (int)numClass.Value + "人)は正しいですか？\n続行の場合は、「OK」を、\n修正したい場合は「キャンセル」を押してください。", "確認", MessageBoxButtons.OKCancel, MessageBoxIcon.Question);
-            if (dlg != DialogResult.OK) return;
+            if (string.IsNullOrEmpty(tbClassName.Text))
+            {
+                MessageBox.Show("クラス名が入力されていません。", "エラー", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                return;
+            }
 
+            var dlg = MessageBox.Show("クラス設定\n　クラス名："+ tbClassName.Text + "\n　人数：" + (int)numClass.Value + "\n\n入力に間違いはありませんか？", "確認", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            if (dlg != DialogResult.Yes) return;
+
+            tbClassName.Enabled = false;
             numClass.Enabled = false;
+            className = tbClassName.Text;
             classNum = (int)numClass.Value;
 
             // ファイルの選択
@@ -266,33 +269,44 @@ namespace DeskChanger
 
             try
             {
-                //リソースを読み込む
-                var stream = asm.GetManifestResourceStream("DeskChanger.Template_Record.xlsx");
-                var buffer = new byte[stream.Length];
-                stream.Read(buffer, 0, (int)buffer.Length);
-                stream.Close();
+                // 名簿テンプレートの作成
+                var wb = new XLWorkbook();
+                var ws = wb.Worksheets.Add("Sheet1");
 
-                //ファイルに書き込む
-                var fs = new System.IO.FileStream(fileName, System.IO.FileMode.Create);
-                fs.Write(buffer, 0, (int)buffer.Length);
-                fs.Close();
+                // セルの設定
+                ws.Range("B2:C51").Style
+                    .Border.SetTopBorder(XLBorderStyleValues.Thin)
+                    .Border.SetBottomBorder(XLBorderStyleValues.Thin)
+                    .Border.SetLeftBorder(XLBorderStyleValues.Thin)
+                    .Border.SetRightBorder(XLBorderStyleValues.Thin);
 
-                // 出席番号の書き込み
-                using (var wb = new XLWorkbook(fileName))
+                ws.Column("C").Width = 14;
+
+                var r = ws.Range("B2:C2");
+                r.Merge();
+                r.Value = className + "名簿";
+                r.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+
+                ws.Cell("B3").Value = "出席番号";
+                ws.Cell("C3").Value = "氏名";
+
+                for (var i = 1; i <= classNum; i++)
                 {
-                    var ws = wb.Worksheet("Sheet1");
-                    for (var i = 1; i <= classNum; i++)
-                    {
-                        ws.Cell(3 + i, 2).Value = i.ToString();
-                    }
-
-                    wb.Save();
+                    ws.Cell(3 + i, 2).Value = i.ToString();
+                    ws.Cell(3 + i, 2).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
                 }
+
+                wb.SaveAs(fileName);
+                
             }
             catch (Exception ex)
             {
-                var appendText = DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss") + ":" + Environment.NewLine + ex.Message + Environment.NewLine + ex.StackTrace;
-                System.IO.File.AppendAllText(Environment.CurrentDirectory + "\\error.log", appendText);
+                var logPath = Environment.CurrentDirectory + "\\error.log";
+                var log = "";
+                if (System.IO.File.Exists(logPath)) log = System.IO.File.ReadAllText(logPath);
+                log = DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss") + ":" + Environment.NewLine + ex.Message + Environment.NewLine + ex.StackTrace + Environment.NewLine + log;
+                System.IO.File.WriteAllText(logPath, log);
+                MessageBox.Show("予期しないエラーが発生しました。\n詳しくは開発者にお問い合わせください。", "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
@@ -333,11 +347,18 @@ namespace DeskChanger
                 }
 
             }
+            catch (System.IO.IOException)
+            {
+                MessageBox.Show("ファイルが使用中です。\nファイルを閉じてから再試行してください。", "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
             catch (Exception ex)
             {
+                var logPath = Environment.CurrentDirectory + "\\error.log";
+                var log = "";
+                if (System.IO.File.Exists(logPath)) log = System.IO.File.ReadAllText(logPath);
+                log = DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss") + ":" + Environment.NewLine + ex.Message + Environment.NewLine + ex.StackTrace + Environment.NewLine + log;
+                System.IO.File.WriteAllText(logPath, log);
                 MessageBox.Show("予期しないエラーが発生しました。\n詳しくは開発者にお問い合わせください。", "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                var appendText = DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss") + ":" + Environment.NewLine + ex.Message + Environment.NewLine + ex.StackTrace;
-                System.IO.File.AppendAllText(Environment.CurrentDirectory + "\\error.log", appendText);
                 return;
             }
 
@@ -372,7 +393,7 @@ namespace DeskChanger
                 {
                     var dlg = MessageBox.Show((e.RowIndex + 1) + "番を前にしますか？", "確認", MessageBoxButtons.OKCancel, MessageBoxIcon.Question);
                     if (dlg != DialogResult.OK) return;
-                    forwards.Add(e.RowIndex);
+                    forwards.Add(e.RowIndex + 1);
                     dgvSelection.Rows[e.RowIndex].Cells[0].Value = true;
                 }
 
