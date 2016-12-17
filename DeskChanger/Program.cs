@@ -16,7 +16,7 @@ namespace DeskChanger
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new SeatVisualizer());
+            Application.Run(new Preference());
         }
     }
 }
