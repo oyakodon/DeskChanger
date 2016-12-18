@@ -34,7 +34,7 @@ namespace DeskChanger
         /// <summary>
         /// 名簿
         /// </summary>
-        public static List<string> record { get; set; }
+        public static Dictionary<int, string> record { get; set; }
 
         /// <summary>
         /// 前にしたい人
@@ -80,7 +80,7 @@ namespace DeskChanger
 
             // 変数
             useRecord = false;
-            record = new List<string>();
+            record = new Dictionary<int, string>();
             forwards = new List<int>();
             progress = 0;
             emptyChkBoxes = new List<CheckBox>();
@@ -171,16 +171,18 @@ namespace DeskChanger
                     var dt = new DataTable();
                     dt.Columns.AddRange(new DataColumn[3] { new DataColumn("前", typeof(bool)), new DataColumn("出席番号", typeof(int)),
                     new DataColumn("氏名", typeof(string))});
-                    for (var i = 0; i < classNum; i++)
+                    if (useRecord)
                     {
-                        if (useRecord)
+                        foreach(var p in record)
                         {
-                            dt.Rows.Add(false, i + 1, record[i]);
-                        } else
+                            dt.Rows.Add(false, p.Key, p.Value);
+                        }
+                    } else
+                    {
+                        for (var i = 0; i < classNum; i++)
                         {
                             dt.Rows.Add(false, i + 1, "");
                         }
-                        
                     }
                     dgvSelection.DataSource = dt;
 
@@ -336,14 +338,12 @@ namespace DeskChanger
                 using (var wb = new XLWorkbook(ofd.FileName))
                 {
                     var ws = wb.Worksheet("Sheet1");
-                    var i = 0;
-                    var cell = ws.Cell(4, 3);
-                    while (!cell.IsEmpty())
+                    var r = ws.Range("B4:B51").CellsUsed();
+                    foreach (var cell in r)
                     {
-                        record.Add(cell.Value.CastTo<string>());
-                        i++;
-                        cell = ws.Cell(4 + i, 3);
+                        record.Add(cell.Value.CastTo<int>(), cell.CellRight().Value.CastTo<string>());
                     }
+
                 }
 
             }
@@ -365,9 +365,9 @@ namespace DeskChanger
             var dt = new DataTable();
             dt.Columns.AddRange(new DataColumn[2] { new DataColumn("出席番号", typeof(int)),
             new DataColumn("氏名", typeof(string))});
-            for (var i = 0; i < record.Count; i++)
+            foreach(var p in record)
             {
-                dt.Rows.Add(i + 1, record[i]);
+                dt.Rows.Add(p.Key, p.Value);
             }
             dgvRecord.DataSource = dt;
 
@@ -387,13 +387,13 @@ namespace DeskChanger
             {
                 if (dgvSelection.Rows[e.RowIndex].Cells[0].Value.CastTo<bool>())
                 {
-                    forwards.Remove(e.RowIndex);
+                    forwards.Remove(dgvSelection.Rows[e.RowIndex].Cells[1].Value.CastTo<int>());
                     dgvSelection.Rows[e.RowIndex].Cells[0].Value = false;
                 } else
                 {
                     var dlg = MessageBox.Show((e.RowIndex + 1) + "番を前にしますか？", "確認", MessageBoxButtons.OKCancel, MessageBoxIcon.Question);
                     if (dlg != DialogResult.OK) return;
-                    forwards.Add(e.RowIndex + 1);
+                    forwards.Add(dgvSelection.Rows[e.RowIndex].Cells[1].Value.CastTo<int>());
                     dgvSelection.Rows[e.RowIndex].Cells[0].Value = true;
                 }
 

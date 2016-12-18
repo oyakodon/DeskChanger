@@ -37,8 +37,18 @@ namespace DeskChanger
         {
             rndList = new List<int>();
 
-            for (var i = 0; i < Preference.classNum; ++i)
-                rndList.Add(i + 1);
+            if (Preference.useRecord)
+            {
+                foreach (var p in Preference.record)
+                {
+                    rndList.Add(p.Key);
+                }
+            } else
+            {
+                for (var i = 0; i < Preference.classNum; i++)
+                    rndList.Add(i + 1);
+            }
+                
 
             var rnd = new Random();
             var n = rndList.Count;
@@ -98,10 +108,12 @@ namespace DeskChanger
                         label.Text = "空";
                     } else
                     {
-                        label.Text = rndList[count].ToString();
                         if (Preference.useRecord)
                         {
-                            label.Text += Environment.NewLine + Preference.record[rndList[count] - 1];
+                            label.Text = rndList[count].ToString() + Environment.NewLine + Preference.record[rndList[count]];
+                        } else
+                        {
+                            label.Text = rndList[count].ToString();
                         }
                         count++;
                     }
@@ -221,7 +233,7 @@ namespace DeskChanger
                             var str = rndList[count].ToString();
                             if (Preference.useRecord)
                             {
-                                str += Environment.NewLine + Preference.record[rndList[count] - 1];
+                                str += Environment.NewLine + Preference.record[rndList[count]];
                             }
 
                             ws.Cell(6 + i, 2 + j).Value = str;
